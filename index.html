@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Roster Dashboard</title>
+    <style>
+      .officer-identity {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 12px;
+        align-items: center;
+        margin-top: 8px;
+        padding: 10px 12px;
+        background: #f9f9f9;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+      }
+      .officer-identity label {
+        font-size: 12px;
+        color: #555;
+        white-space: nowrap;
+      }
+      .officer-identity input {
+        padding: 5px 8px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 13px;
+        width: 140px;
+      }
+      .optional {
+        font-size: 10px;
+        color: #aaa;
+        font-style: italic;
+      }
+    </style>
+    <style>
+      body {
+        font-family: Arial;
+        padding: 20px;
+        background: #f7f9fc;
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 15px;
+        align-items: center;
+      }
+      .lane-group {
+        width: 100%;
+        flex-basis: 100%;
+      }
+      .segmented {
+        position: relative;
+        display: flex;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .segment-btn {
+        flex: 1;
+        padding: 8px 16px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        font-weight: bold;
+        z-index: 2;
+        color: black;
+        position: relative;
+        z-index: 2;
+        transition: color 0.2s ease;
+      }
+      .segment-btn.active {
+        color: white;
+      }
+      .segment-highlight {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 50%;
+        border-radius: 8px;
+        transition: 0.25s ease;
+        z-index: 1;
+        background: #4caf50;
+        transform: translateX(0%);
+      }
+      #modeHighlight {
+        background: #4caf50;
+        transform: translateX(0%);
+      }
+      #shiftHighlight {
+        background: #b0bec5;
+        transform: translateX(0%);
+      }
+      /* Lane selector */
+      .lane-group {
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+        width: 100%;
+      }
+      .lane-btn {
+        flex: 1;
+        padding: 8px 14px;
+        border: none;
+        background: #f5f5f5;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 13px;
+        color: #555;
+        border-right: 1px solid #ddd;
+        transition:
+          background 0.2s,
+          color 0.2s;
+      }
+      .lane-btn:last-child {
+        border-right: none;
+      }
+      .lane-btn:hover {
+        background: #e3e3e3;
+      }
+      .lane-btn.active {
+        background: #1565c0;
+        color: #fff;
+      }
+      .color-group {
+        display: flex;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .color-btn {
+        width: 28px;
+        height: 28px;
+        border: none;
+        cursor: pointer;
+      }
+      .color-btn.selected {
+        outline: 2px none black;
+      }
+      #clearGridBtn {
+        padding: 8px 16px;
+      }
+      .table-container {
+        overflow: auto;
+        border: 1px solid #ccc;
+        background: white;
+      }
+      table {
+        border-collapse: collapse;
+        font-size: 11px;
+        white-space: nowrap;
+      }
+      th,
+      td {
+        border: 1px solid #ccc;
+        padding: 4px;
+        text-align: center;
+      }
+      .zone-header {
+        background: #eee;
+        font-weight: bold;
+        text-align: left;
+        padding-left: 6px;
+      }
+      .time-header th {
+        background: #f0f0f0;
+        font-size: 10px;
+      }
+      td.counter-cell {
+        transition:
+          background-color 0.12s ease,
+          box-shadow 0.12s ease;
+        cursor: cell;
+        user-select: none;
+      }
+      td.counter-cell:not(.active):hover {
+        background-color: rgba(0, 0, 0, 0.07) !important;
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+      }
+      td.counter-cell.active {
+        border: 2px solid rgba(0, 0, 0, 0.4);
+        box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.18);
+      }
+      td.counter-cell.active:hover {
+        filter: brightness(0.9);
+      }
+      .subtotal-row td {
+        background: #e8f5e9;
+        font-weight: bold;
+      }
+      .grandtotal-row td {
+        background: #fff3e0;
+        font-weight: bold;
+      }
+      #manningSummary {
+        background: white;
+        padding: 10px;
+        border: 1px solid #ccc;
+        white-space: pre;
+      }
+      .summary-controls {
+        margin: 10px 0;
+      }
+      #copySummaryBtn {
+        padding: 8px 14px;
+        border: none;
+        background: #2196f3;
+        color: white;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      #copySummaryBtn.copied {
+        background: #4caf50;
+      }
+      .manpower-section {
+        background: white;
+        padding: 12px;
+        border: 1px solid #ccc;
+        margin-bottom: 15px;
+      }
+      .manpower-type {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .mp-type {
+        padding: 6px 12px;
+        border: 1px solid #ccc;
+        background: #f0f0f0;
+        cursor: pointer;
+        border-radius: 6px;
+      }
+      .mp-type.active {
+        background: #2196f3;
+        color: white;
+      }
+      .mp-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+      #addOfficerBtn {
+        padding: 6px 14px;
+        background: #4caf50;
+        border: none;
+        color: white;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      #removeOfficerBtn {
+        padding: 6px 14px;
+        background: #f44336;
+        border: none;
+        color: white;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      #undoBtn {
+        padding: 6px 14px;
+        background: #9c27b0;
+        border: none;
+        color: white;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      #editNamesBtn {
+        padding: 6px 14px;
+        background: #00897b;
+        border: none;
+        color: white;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      .mp-type[data-type="ra"] {
+        background: #e3f2fd;
+        color: #1565c0;
+        border-color: #90caf9;
+      }
+      .mp-type[data-type="ra"].active {
+        background: #1565c0;
+        color: white;
+        border-color: #1565c0;
+      }
+      .mp-type[data-type="ro"] {
+        background: #fce4ec;
+        color: #b71c1c;
+        border-color: #f48fb1;
+      }
+      .mp-type[data-type="ro"].active {
+        background: #b71c1c;
+        color: white;
+        border-color: #b71c1c;
+      }
+      #copyMainRosterBtn,
+      #copySOSRosterBtn,
+      #copyOTRosterBtn {
+        padding: 8px 14px;
+        border: none;
+        background: #2196f3;
+        color: white;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      #copyMainRosterBtn.copied,
+      #copySOSRosterBtn.copied,
+      #copyOTRosterBtn.copied {
+        background: #4caf50;
+      }
+      /* Cargo variation tabs */
+      #cargoVariationTabs {
+        display: none;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 8px 0 4px 0;
+        border-bottom: 2px solid #ddd;
+        margin-bottom: 8px;
+      }
+      .cargo-var-btn {
+        padding: 5px 14px;
+        border: 1px solid #b0bec5;
+        background: #f5f5f5;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        color: #555;
+        transition:
+          background 0.15s,
+          color 0.15s;
+      }
+      .cargo-var-btn:hover {
+        background: #e0e0e0;
+      }
+      .cargo-var-btn.active {
+        background: #37474f;
+        color: #fff;
+        border-color: #37474f;
+      }
+      /* Cargo break and closed cells */
+      td.counter-cell.cargo-break {
+        background: #b0bec5 !important;
+        opacity: 0.85;
+      }
+      td.counter-cell.cargo-closed {
+        background: #eceff1 !important;
+        cursor: not-allowed;
+        pointer-events: none;
+        opacity: 0.35;
+      }
+      /* Cargo cover breaks separator */
+      td.cargo-separator {
+        background: #eceff1;
+        font-size: 10px;
+        font-weight: 700;
+        color: #78909c;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 3px 6px;
+        border-top: 2px solid #b0bec5;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Roster Optimisation Dashboard</h2>
+
+    <div class="controls">
+      <div class="segmented lane-group">
+        <button class="lane-btn active" data-lane="car">🚗 Car</button>
+        <button class="lane-btn" data-lane="bus">🚌 Bus</button>
+        <button class="lane-btn" data-lane="train">🚆 Train</button>
+        <button class="lane-btn" data-lane="cargo">📦 Cargo</button>
+        <button class="lane-btn" data-lane="owc">🎓 OWC</button>
+      </div>
+      <div class="segmented mode-group">
+        <div class="segment-highlight" id="modeHighlight"></div>
+        <button id="arrivalBtn" class="segment-btn" data-index="0">
+          Arrival
+        </button>
+        <button id="departureBtn" class="segment-btn" data-index="1">
+          Departure
+        </button>
+      </div>
+      <div class="segmented shift-group">
+        <div class="segment-highlight" id="shiftHighlight"></div>
+        <button id="morningBtn" class="segment-btn" data-index="0">
+          Morning
+        </button>
+        <button id="nightBtn" class="segment-btn" data-index="1">Night</button>
+      </div>
+      <div class="color-group">
+        <button
+          class="color-btn selected"
+          data-color="#4CAF50"
+          style="background: #4caf50"
+        ></button>
+        <button
+          class="color-btn"
+          data-color="#FF9800"
+          style="background: #ff9800"
+        ></button>
+        <button
+          class="color-btn"
+          data-color="#FFFF00"
+          style="background: #ffff00"
+        ></button>
+        <button
+          class="color-btn"
+          data-color="#FFB6C1"
+          style="background: #ffb6c1"
+        ></button>
+        <button
+          class="color-btn"
+          data-color="#800080"
+          style="background: #800080"
+        ></button>
+        <button
+          class="color-btn"
+          data-color="#2196F3"
+          style="background: #2196f3"
+        ></button>
+        <button
+          class="color-btn"
+          data-color="#FF0000"
+          style="background: #ff0000"
+        ></button>
+        <div style="width: 1px; background: #ccc; margin: 2px 4px"></div>
+        <button
+          class="color-btn"
+          data-color="#BBDEFB"
+          style="background: #bbdefb"
+          title="Cargo 1"
+        ></button>
+        <button
+          class="color-btn"
+          data-color="#FFE0B2"
+          style="background: #ffe0b2"
+          title="Cargo 2"
+        ></button>
+        <button
+          class="color-btn"
+          data-color="#C8E6C9"
+          style="background: #c8e6c9"
+          title="Cargo 3"
+        ></button>
+        <button
+          class="color-btn"
+          data-color="#F8BBD0"
+          style="background: #f8bbd0"
+          title="Cargo 4"
+        ></button>
+        <button
+          class="color-btn"
+          data-color="#FFF9C4"
+          style="background: #fff9c4"
+          title="Cargo 5"
+        ></button>
+        <button
+          class="color-btn"
+          data-color="#EEEEEE"
+          style="background: #eeeeee"
+          title="Cargo 6"
+        ></button>
+      </div>
+      <button id="clearGridBtn">Clear Grid</button>
+    </div>
+
+    <div class="manpower-section">
+      <h3>Add Officers</h3>
+      <div class="manpower-type">
+        <button class="mp-type active" data-type="main">Main</button>
+        <button class="mp-type" data-type="sos">SOS</button>
+        <button class="mp-type" data-type="ot">OT</button>
+      </div>
+      <div id="raroRow" style="display: none; margin-bottom: 8px; gap: 8px">
+        <button class="mp-type" data-type="ra">RA</button>
+        <button class="mp-type" data-type="ro">RO</button>
+      </div>
+      <div class="mp-controls">
+        <label>Number of Officers:</label>
+        <input type="number" id="officerCount" min="1" value="1" />
+        <div id="trainOwcFields" style="display: none">
+          <hr
+            style="border: none; border-top: 1px solid #e0e0e0; margin: 8px 0"
+          />
+          <label id="trainOwcLabel">Train Officers:</label>
+          <input type="number" id="trainOwcCount" min="1" value="1" />
+          <button id="addTrainOwcBtn">Add</button>
+          <small
+            id="trainOwcHint"
+            style="
+              color: #888;
+              font-size: 11px;
+              display: block;
+              margin-top: 3px;
+            "
+            >Remove individually via Remove Officer</small
+          >
+        </div>
+        <div id="sosFields" style="display: none">
+          <label>Start (HH:MM)</label><input type="time" id="sosStart" />
+          <label>End (HH:MM)</label><input type="time" id="sosEnd" />
+          <label>Name <span class="optional">(optional)</span></label>
+          <input type="text" id="sosOfficerName" placeholder="e.g. John" />
+        </div>
+        <div id="otFields" style="display: none">
+          <label>OT Slot</label>
+          <select id="otSlot">
+            <option value="1100-1600">1100 – 1600</option>
+            <option value="1600-2100">1600 – 2100</option>
+          </select>
+          <label>Name <span class="optional">(optional)</span></label>
+          <input type="text" id="otOfficerName" placeholder="e.g. Jane" />
+        </div>
+        <div id="raFields" style="display: none">
+          <label>Officer</label
+          ><select id="raOfficer"></select>
+          <label>Report After (HH:MM)</label><input type="time" id="raTime" />
+        </div>
+        <div id="roFields" style="display: none">
+          <label>Officer</label
+          ><select id="roOfficer"></select>
+          <label>Report Off (HH:MM)</label><input type="time" id="roTime" />
+        </div>
+        <div class="action-buttons">
+          <button id="addOfficerBtn">Add Officers</button>
+          <button
+            id="confirmRaRoBtn"
+            style="
+              display: none;
+              padding: 6px 14px;
+              background: #f57c00;
+              border: none;
+              color: white;
+              border-radius: 6px;
+              cursor: pointer;
+              font-weight: 600;
+            "
+          >
+            Confirm
+          </button>
+          <button id="removeOfficerBtn">Remove Officer</button>
+          <button id="editNamesBtn">Edit Names</button>
+          <button id="undoBtn">Undo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cargo variation tabs — shown only on Cargo lane -->
+    <div id="cargoVariationTabs"></div>
+
+    <div class="table-container">
+      <table id="rosterTable"></table>
+    </div>
+
+    <h3>Manning Summary</h3>
+    <div class="summary-controls">
+      <button id="copySummaryBtn">Copy Summary</button>
+    </div>
+    <pre id="manningSummary"></pre>
+
+    <h2>Roster</h2>
+    <h3>Main Roster</h3>
+    <button id="copyMainRosterBtn">Copy Main Roster</button>
+    <table id="mainRosterTable">
+      <thead>
+        <tr>
+          <th>Officer</th>
+          <th>Counter / Break</th>
+          <th>Start</th>
+          <th>End</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <h3>SOS Roster</h3>
+    <button id="copySOSRosterBtn">Copy SOS Roster</button>
+    <table id="sosRosterTable">
+      <thead>
+        <tr>
+          <th>Officer</th>
+          <th>Counter / Break</th>
+          <th>Start</th>
+          <th>End</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <h3>OT Roster</h3>
+    <button id="copyOTRosterBtn">Copy OT Roster</button>
+    <table id="otRosterTable">
+      <thead>
+        <tr>
+          <th>Officer</th>
+          <th>Counter / Break</th>
+          <th>Start</th>
+          <th>End</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <!-- <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script> -->
+    <script src="xlsx.full.min.js"></script>
+    <script src="script.js"></script>
+    <script src="sync.js"></script>
+  </body>
+</html>
